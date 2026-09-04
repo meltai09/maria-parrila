@@ -22,11 +22,17 @@ type Product = {
   // no gradient at all across the fill, matching the brand's real
   // Instagram posts. One slide sits on --color-orange (#C43A24, the same
   // token the "Sobre" section below uses, so the two read as one
-  // continuous block), the other on --color-orange-bright (#F87000). The
-  // ONLY non-solid element is a small, tightly-contained dark vignette
-  // localized directly behind the product, for separation from a
-  // same-hue-family background — it must stay small enough that it never
-  // reads as a second background tone.
+  // continuous block), the other on --color-orange-bright (#F87000).
+  // The dark vignette behind the product used to live HERE, as a small
+  // radial-gradient layered into this same section-wide background
+  // string, positioned by percentage of the whole SECTION's box. That
+  // made it fragile: the section's height varies by breakpoint (and even
+  // between mobile widths, depending on how the description text wraps),
+  // while the product's own on-screen position is fixed in real pixels —
+  // so on mobile the vignette drifted ~113px below the product, reading
+  // as a stray dark patch instead of a glow behind it. Moved to a
+  // dedicated element anchored to the product's own box instead (see the
+  // product wrapper below) — this string is now just the flat color.
   backdrop: string;
 };
 
@@ -38,8 +44,7 @@ const PRODUCTS: Product[] = [
       "Rosbife de filé-mignon na parrilla, queijo cremoso do Marajó, tomate grelhado, chutney de manga e chimichurri.",
     image: "/images/hero/file-cutout.png",
     badges: ["Suculento", "Na parrilla", "Artesanal"],
-    backdrop:
-      "radial-gradient(210px 150px at 50% 44%, rgba(0,0,0,0.4), transparent 68%), var(--color-orange)",
+    backdrop: "var(--color-orange)",
   },
   {
     id: "estacao-belem",
@@ -48,8 +53,7 @@ const PRODUCTS: Product[] = [
       "Black Angus, queijo coalho do Marajó e bacon caramelizado com castanha-do-Pará, uma homenagem à Amazônia.",
     image: "/images/hero/estacao-belem-cutout.png",
     badges: ["Amazônico", "Black Angus", "Defumado"],
-    backdrop:
-      "radial-gradient(210px 150px at 50% 44%, rgba(0,0,0,0.4), transparent 68%), var(--color-orange-bright)",
+    backdrop: "var(--color-orange-bright)",
   },
 ];
 
@@ -212,7 +216,7 @@ export function Hero() {
       <div className="relative z-10 flex w-full flex-col">
         <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 pb-10 sm:px-10">
           <motion.div
-            className="touch-pan-y relative mt-2 flex flex-1 items-center justify-center sm:mt-6 lg:mt-14"
+            className="touch-pan-y relative mt-4 flex flex-1 items-center justify-center sm:mt-6 lg:mt-14"
             onPanEnd={handlePanEnd}
           >
             {/* Setas de navegação — filhas da stage (não da section) para que
@@ -345,7 +349,14 @@ export function Hero() {
                 className="relative z-20"
                 style={{ willChange: isTransitioning ? "transform, opacity" : "auto" }}
               >
-                <div className="flex translate-y-4 flex-col items-center sm:mt-10 sm:translate-y-0 lg:mt-14">
+                {/* Mobile usava translate-y-4 (transform, sem contribuição de
+                    layout) em vez de margem real — a mesma pegadinha já
+                    documentada para o desktop na v6 do Hero. Isso deslocava
+                    a imagem visualmente para baixo sem nunca reservar esse
+                    espaço no fluxo, fazendo-a invadir o pequeno gap (6px)
+                    reservado para os badges de sabor logo abaixo. Trocado
+                    por mt-3 real, que agora conta na altura do stage. */}
+                <div className="flex flex-col items-center mt-3 sm:mt-10 lg:mt-14">
                   {/* Magnetic-cursor detection area for the product photo
                       (useMagnetic, same hook as the CTAs — see
                       src/hooks/useMagnetic.ts). Two nested divs, both new,
@@ -378,8 +389,44 @@ export function Hero() {
                         translate, then the child motion.div's own
                         translate/rotate/scale on top), on two different
                         elements. */}
-                  <div className="-mx-5 -mt-5 px-5 pt-5">
-                    <div ref={productMagnetRef} className="fx-magnet">
+                  <div className="relative -mx-5 -mt-5 px-5 pt-5">
+                    {/* Vinheta atrás do produto — elemento próprio, estático
+                      (não participa da técnica de duas camadas do produto
+                      logo abaixo, nem do floating/transição dela: um bug de
+                      performance já documentado neste projeto veio
+                      exatamente de conteúdo re-rasterizando a cada frame, e
+                      esta camada não precisa acompanhar o wiggle de ±14px
+                      do floating em tempo real para ler bem, mesma lógica
+                      já usada para a sombra da própria foto). Vive FORA do
+                      motion.div animado e FORA do .fx-magnet (não herda o
+                      puxão do ímã, nem a flutuação/transição do produto) —
+                      só centralizada dentro deste wrapper, que por sua vez
+                      já tem exatamente o tamanho da caixa da imagem (o
+                      padding em 3 lados é cancelado por uma margem negativa
+                      igual, técnica já usada aqui para a área de detecção
+                      do ímã). Tamanho em INSET NEGATIVO (não px/vw fixos):
+                      cresce/encolhe automaticamente junto com a caixa da
+                      imagem em qualquer breakpoint, sem precisar de valores
+                      próprios por tamanho de tela. inset-[12%] encolhe a
+                      vinheta pra ~76% da caixa — menor que a própria caixa
+                      de propósito, para o alimento (que já preenche uma
+                      das duas dimensões da caixa via object-contain,
+                      dependendo do recorte) ultrapassar visivelmente a
+                      vinheta nessa dimensão, em vez de ficar 100% contido
+                      nela. `radial-gradient(... closest-side ...)` faz a
+                      elipse encostar exatamente nas bordas DESTA caixa
+                      (já menor que a da imagem), garantindo fade suave sem
+                      nunca formar canto reto; blur-lg soma uma segunda
+                      camada de suavização por cima do próprio gradiente. */}
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-[12%] z-0 rounded-full blur-lg"
+                      style={{
+                        background:
+                          "radial-gradient(ellipse closest-side, rgba(0,0,0,0.45), rgba(0,0,0,0.18) 55%, transparent 100%)",
+                      }}
+                    />
+                    <div ref={productMagnetRef} className="fx-magnet relative z-10">
                       {/* Duas cópias da mesma imagem, mas um ÚNICO contêiner
                         (este motion.div) recebe qualquer transform — tanto do
                         floating idle quanto (por herança do motion.div pai da
@@ -444,7 +491,7 @@ export function Hero() {
                     produto (nenhuma animação extra), em fluxo normal para
                     que o espaço embaixo seja sempre reservado (nunca
                     sobrepõe a descrição abaixo). */}
-                  <div className="mt-1.5 flex flex-wrap items-center justify-center gap-1.5 sm:mt-2 sm:gap-2">
+                  <div className="mt-5 flex flex-wrap items-center justify-center gap-1.5 sm:mt-2 sm:gap-2">
                     {product.badges.map((label, i) => (
                       <span
                         key={label}

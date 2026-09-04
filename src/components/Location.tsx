@@ -27,6 +27,33 @@ function PinIcon({ className }: { className?: string }) {
   );
 }
 
+// SVG replacement for the ✳ (U+2733 EIGHT SPOKED ASTERISK) that used to sit
+// beside "Horários da brasa" as a raw Unicode character. That glyph has no
+// guaranteed text presentation across platforms — iOS Safari falls back to
+// Apple's color emoji font for it (rendering a green/yellow emoji burst)
+// even though Chrome desktop draws it as a plain text glyph in the current
+// font. An inline SVG (same pattern as PinIcon above — this project has no
+// icon library, see the CTA button's location icon) renders identically
+// everywhere, same as the map marker/CTA icon already do. currentColor
+// keeps the same text-gold/80 color technique the span used before.
+function AsteriskIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      aria-hidden="true"
+      className={className}
+    >
+      <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93 4.93 19.07" />
+    </svg>
+  );
+}
+
 export function Location() {
   return (
     <section
@@ -101,9 +128,7 @@ export function Location() {
 
             <div className="border-t border-ink/20 pt-10">
               <div className="flex items-center gap-3">
-                <span aria-hidden="true" className="font-display text-lg text-gold/80">
-                  ✳
-                </span>
+                <AsteriskIcon className="shrink-0 text-gold/80" />
                 <TexturedHeading
                   as="h3"
                   level={2}
@@ -114,9 +139,7 @@ export function Location() {
                 >
                   Horários da brasa
                 </TexturedHeading>
-                <span aria-hidden="true" className="font-display text-lg text-gold/80">
-                  ✳
-                </span>
+                <AsteriskIcon className="shrink-0 text-gold/80" />
               </div>
 
               {/* grid-cols-2 fixo (não sm:grid-cols-4): a coluna de
