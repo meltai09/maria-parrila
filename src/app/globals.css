@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+:root {
+  --color-ink: #0b0705;
+  --color-ink-soft: #1a120b;
+  --color-ink-line: #2c1d10;
+  --color-ember: #ff6a1a;
+  --color-flame: #e8321a;
+  --color-gold: #ffb648;
+  --color-cream: #fbead2;
+  --color-cream-dim: #d8c3a0;
+  /* Official brand orange pair, extracted from /referencia/marca/logo.png's
+     flame gradient. Section-background colors — distinct from flame/ember
+     (the CTA "red" family, which stays red and is never swapped for these). */
+  --color-orange: #c43a24;
+  --color-orange-bright: #f87000;
+  /* Sampled (via sharp) from the top edge of ilustracao-floresta-divisor.png
+     — deliberately different from --color-orange so the Sobre section's
+     background reads as one continuous surface with the illustration
+     below it, with zero seam. This means Hero and Sobre, which used to
+     share the identical --color-orange, now differ slightly in tone —
+     a deliberate tradeoff (illustration continuity over Hero/Sobre
+     continuity), not an oversight. */
+  --color-orange-sobre: #e7560b;
+}
+
+@theme inline {
+  --color-ink: var(--color-ink);
+  --color-ink-soft: var(--color-ink-soft);
+  --color-ink-line: var(--color-ink-line);
+  --color-ember: var(--color-ember);
+  --color-flame: var(--color-flame);
+  --color-gold: var(--color-gold);
+  --color-cream: var(--color-cream);
+  --color-cream-dim: var(--color-cream-dim);
+  --color-orange: var(--color-orange);
+  --color-orange-bright: var(--color-orange-bright);
+  --color-orange-sobre: var(--color-orange-sobre);
+  --font-display: var(--font-bebas), var(--font-anton), var(--font-oswald), sans-serif;
+  --font-condensed: var(--font-oswald), sans-serif;
+  --font-body: var(--font-inter), system-ui, sans-serif;
+}
+
+body {
+  background: var(--color-ink);
+  color: var(--color-cream);
+}
+
+::selection {
+  background: var(--color-flame);
+  color: var(--color-cream);
+}
+
+/* Subtle full-surface film grain, used behind hero/section content to keep
+   the flat brand-black from looking like a plain digital fill. */
+.bg-grain {
+  position: relative;
+  isolation: isolate;
+}
+.bg-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.5;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch' seed='3'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+/* Magnetic-cursor CTAs (useMagnetic hook): a single rule for both the
+   transform pull the hook drives and the pre-existing color/border hover
+   transitions on those buttons — kept in one declaration on purpose,
+   since two separate `transition` rules on the same element don't merge
+   (the later one wins outright for transition-property/duration/timing-
+   function as a whole, it doesn't combine per listed property). Splitting
+   "transform" into its own class alongside Tailwind's `transition`
+   utility would silently drop one of the two timings. */
+.fx-magnet {
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    transform 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
