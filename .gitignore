@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# material de referencia interno (nao e codigo de producao)
+/referencia/
