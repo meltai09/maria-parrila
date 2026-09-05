@@ -216,7 +216,7 @@ export function Hero() {
       <div className="relative z-10 flex w-full flex-col">
         <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 pb-10 sm:px-10">
           <motion.div
-            className="touch-pan-y relative mt-4 flex flex-1 items-center justify-center sm:mt-6 lg:mt-14"
+            className="touch-pan-y relative mt-2 flex flex-1 items-center justify-center sm:mt-6 lg:mt-14"
             onPanEnd={handlePanEnd}
           >
             {/* Setas de navegação — filhas da stage (não da section) para que
@@ -353,10 +353,19 @@ export function Hero() {
                     layout) em vez de margem real — a mesma pegadinha já
                     documentada para o desktop na v6 do Hero. Isso deslocava
                     a imagem visualmente para baixo sem nunca reservar esse
-                    espaço no fluxo, fazendo-a invadir o pequeno gap (6px)
-                    reservado para os badges de sabor logo abaixo. Trocado
-                    por mt-3 real, que agora conta na altura do stage. */}
-                <div className="flex flex-col items-center mt-3 sm:mt-10 lg:mt-14">
+                    espaço no fluxo. Removido por completo no mobile (sem
+                    mt-* aqui), não substituído por um mt-* real menor:
+                    o gap contra os badges de sabor abaixo é controlado
+                    inteiramente pela margem PRÓPRIA da badges row (ver
+                    mt-4 mais abaixo), não por este offset — então este
+                    valor não precisa ser positivo para o bug de
+                    compressão original ficar corrigido, só precisa não
+                    ser um transform fantasma. Uma rodada anterior tinha
+                    somado mt-3 (12px) aqui mesmo sem precisar, inflando a
+                    altura total do Hero (+34px no total, medido) sem
+                    ganho de legibilidade correspondente — revertido para
+                    reduzir esse crescimento. */}
+                <div className="flex flex-col items-center sm:mt-10 lg:mt-14">
                   {/* Magnetic-cursor detection area for the product photo
                       (useMagnetic, same hook as the CTAs — see
                       src/hooks/useMagnetic.ts). Two nested divs, both new,
@@ -416,14 +425,36 @@ export function Hero() {
                       nela. `radial-gradient(... closest-side ...)` faz a
                       elipse encostar exatamente nas bordas DESTA caixa
                       (já menor que a da imagem), garantindo fade suave sem
-                      nunca formar canto reto; blur-lg soma uma segunda
-                      camada de suavização por cima do próprio gradiente. */}
+                      nunca formar canto reto.
+
+                      SEM `blur-*`: uma primeira versão somava um filtro de
+                      blur por cima do gradiente para suavizar ainda mais —
+                      parecia correto no Chromium (confirmado visualmente e
+                      via amostragem de pixel), mas reproduzido no WebKit
+                      (Playwright + iPhone 13 emulado) o MESMO elemento
+                      renderizava como um retângulo sólido de cantos duros,
+                      cortando contra o laranja sem gradiente nenhum — bug
+                      real de engine, não CSS incorreto: `filter: blur()`
+                      combinado com `background: radial-gradient(...
+                      transparent ...)` e `border-radius` no MESMO elemento
+                      faz o WebKit compositar a camada de forma diferente do
+                      Chromium (alpha pré-multiplicado tratado errado no
+                      blur, aparentemente). Confirmado isolando a variável:
+                      removendo só o `filter` (mantendo gradiente e
+                      border-radius intactos) via `el.style.filter='none'`
+                      no mesmo teste, o WebKit passou a renderizar a elipse
+                      perfeitamente suave, idêntica ao Chromium — ou seja, o
+                      próprio gradiente (sem blur nenhum) já é suave o
+                      bastante nos dois engines; o blur era só polimento
+                      supérfluo que teve o efeito colateral de quebrar o
+                      WebKit. Compensado com mais paradas de cor no
+                      gradiente (curva mais gradual) em vez do blur. */}
                     <div
                       aria-hidden="true"
-                      className="pointer-events-none absolute inset-[12%] z-0 rounded-full blur-lg"
+                      className="pointer-events-none absolute inset-[12%] z-0 rounded-full"
                       style={{
                         background:
-                          "radial-gradient(ellipse closest-side, rgba(0,0,0,0.45), rgba(0,0,0,0.18) 55%, transparent 100%)",
+                          "radial-gradient(ellipse closest-side, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.32) 30%, rgba(0,0,0,0.16) 60%, rgba(0,0,0,0.05) 85%, transparent 100%)",
                       }}
                     />
                     <div ref={productMagnetRef} className="fx-magnet relative z-10">
@@ -491,7 +522,7 @@ export function Hero() {
                     produto (nenhuma animação extra), em fluxo normal para
                     que o espaço embaixo seja sempre reservado (nunca
                     sobrepõe a descrição abaixo). */}
-                  <div className="mt-5 flex flex-wrap items-center justify-center gap-1.5 sm:mt-2 sm:gap-2">
+                  <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5 sm:mt-2 sm:gap-2">
                     {product.badges.map((label, i) => (
                       <span
                         key={label}
