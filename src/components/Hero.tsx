@@ -22,17 +22,11 @@ type Product = {
   // no gradient at all across the fill, matching the brand's real
   // Instagram posts. One slide sits on --color-orange (#C43A24, the same
   // token the "Sobre" section below uses, so the two read as one
-  // continuous block), the other on --color-orange-bright (#F87000).
-  // The dark vignette behind the product used to live HERE, as a small
-  // radial-gradient layered into this same section-wide background
-  // string, positioned by percentage of the whole SECTION's box. That
-  // made it fragile: the section's height varies by breakpoint (and even
-  // between mobile widths, depending on how the description text wraps),
-  // while the product's own on-screen position is fixed in real pixels —
-  // so on mobile the vignette drifted ~113px below the product, reading
-  // as a stray dark patch instead of a glow behind it. Moved to a
-  // dedicated element anchored to the product's own box instead (see the
-  // product wrapper below) — this string is now just the flat color.
+  // continuous block), the other on --color-orange-bright (#F87000). A
+  // dark radial vignette used to sit behind the product (first as part
+  // of this same string, later as its own dedicated element anchored to
+  // the product's box) — removed entirely by request; no darkening
+  // behind the product at all now, just this flat color.
   backdrop: string;
 };
 
@@ -156,7 +150,24 @@ export function Hero() {
 
   return (
     <section
-      className="bg-grain relative overflow-hidden bg-orange"
+      // h-dvh flex flex-col, só mobile (sm:h-auto sm:block reverte pro
+      // comportamento antigo a partir de 640px, sem nenhuma mudança pro
+      // desktop): critério do produto passou a ser "no mobile, a
+      // primeira tela precisa mostrar SOMENTE o Hero, sem nenhuma
+      // fatia de Nossa História visível antes de rolar" — isso exige
+      // altura TRAVADA na viewport, não mais a altura automática por
+      // conteúdo que o comentário mais abaixo ainda documenta (esse
+      // comentário permanece válido para o desktop, onde nada mudou).
+      // dvh (dynamic viewport height) em vez de vh: vh não desconta a
+      // barra de endereço/UI do navegador de forma consistente entre
+      // iOS Safari e Android Chrome (a barra pode estar expandida ou
+      // recolhida), então 100vh podia ficar maior que a área realmente
+      // visível, sobrando um pedaço da próxima seção na primeira
+      // dobra mesmo sem rolar — exatamente o bug que este critério
+      // pede pra evitar. dvh acompanha a UI do navegador em tempo
+      // real; suportado desde iOS Safari 15.4 e Chrome Android 108
+      // (2022), confortavelmente coberto hoje.
+      className="bg-grain relative flex h-dvh flex-col overflow-hidden bg-orange sm:block sm:h-auto"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
@@ -194,26 +205,35 @@ export function Hero() {
         </div>
       </div>
 
-      {/* SEM min-height explícito (nem vh, nem px) — de propósito. Antes,
-          min-h-[Xvh] crescia o Hero além do necessário em viewports altos/
-          estreitos (768×1024 chegava a ter 142px de vão morto só entre a
-          barra e o lettering), porque vh é relativo à ALTURA do viewport
-          enquanto o conteúdo (fonte em vw, com teto fixo em rem no desktop)
-          só varia com a LARGURA. Medido via script de diagnóstico Playwright
-          nos dois slides, nos 4 viewports de referência (375/768/1440/1920):
-          o fluxo natural (sem nenhum min-height) já produz uma altura
-          idêntica entre os dois slides em cada viewport — 505px@375,
-          472px@768, 563px@1440 e 1920 (mesma, já que o conteúdo do
-          breakpoint lg é fixo em rem, não muda com a altura do viewport) —
-          e zero sobreposição com #sobre em qualquer um. Tentativa de travar
-          essa altura via min-h-[Ypx] com esses mesmos valores foi descartada:
-          um min-height qualquer no container flex empurra o item flex-1
-          filho (que usa flex-basis 0%) para o modo "grow", e nesse modo o
-          layout resultante ficava ~33-51px MAIOR que o fluxo natural
-          (quirk de flexbox, não um bug de conteúdo) — ou seja, o próprio
-          fluxo auto já É a altura fixa correta; impor min-height por cima
-          dele piorava, não travava. */}
-      <div className="relative z-10 flex w-full flex-col">
+      {/* Desktop/tablet (≥640px): continua SEM min-height/height explícito,
+          pelo mesmo motivo de sempre — min-h-[Xvh] crescia o Hero além do
+          necessário em viewports altos/estreitos (768×1024 chegava a ter
+          142px de vão morto só entre a barra e o lettering), porque vh é
+          relativo à ALTURA do viewport enquanto o conteúdo (fonte em vw,
+          com teto fixo em rem no desktop) só varia com a LARGURA. Medido
+          via script de diagnóstico Playwright nos dois slides, nos 4
+          viewports de referência (375/768/1440/1920): o fluxo natural
+          (sem nenhum min-height) já produz uma altura idêntica entre os
+          dois slides em cada viewport, e zero sobreposição com #sobre em
+          qualquer um — o próprio fluxo auto já É a altura correta aí, e
+          nada disso mudou nesta rodada.
+
+          Mobile (<640px): critério mudou (ver comentário na <section>) —
+          agora É pra travar a altura em 100dvh, então este wrapper
+          precisa de flex-1 + min-h-0 pra herdar essa altura fixa e
+          repassá-la pro filho logo abaixo (o `justify-center` mora lá,
+          não aqui — ver comentário nele pra saber por quê). min-h-0 é o
+          que faz um filho flex-1 conseguir ENCOLHER de verdade dentro do
+          espaço travado, em vez de insistir no tamanho mínimo do próprio
+          conteúdo (o quirk padrão de flexbox — sem min-h-0, um filho
+          flex-1 não encolhe abaixo do min-content, e o conjunto vazaria
+          pra fora do 100dvh em telas mais baixas). No desktop, como a
+          SECTION volta a `block` (sm:block, sem altura fixa), essas
+          mesmas classes ficam inertes — flex-1/min-h-0 só têm efeito
+          dentro de um contêiner flex com altura definida, nenhuma das
+          duas condições vale mais a partir de 640px — por isso não
+          precisam de override sm:. */}
+      <div className="relative z-10 flex w-full min-h-0 flex-1 flex-col">
         {/* pb-6 sm:pb-10: antes era só `pb-10` (sem variante), ou seja a
             MESMA regra pro mobile inteiro e pro desktop — reduzir o valor
             base teria encolhido o desktop também. Adicionado `sm:pb-10`
@@ -221,10 +241,29 @@ export function Hero() {
             640px (idêntico ao que já era, em qualquer tamanho ≥sm), e
             `pb-6` como override específico do mobile (<640px) — a técnica
             que este projeto já usa (media query/breakpoint dedicado) em
-            vez de mexer numa regra compartilhada. */}
-        <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 pb-6 sm:px-10 sm:pb-10">
+            vez de mexer numa regra compartilhada.
+
+            justify-center (mobile): primeira tentativa tinha só a STAGE
+            como flex-1 (centralizando produto+lettering dentro da PRÓPRIA
+            caixa), com o bloco de descrição/CTAs logo depois em fluxo
+            normal. Resultado medido/visto em screenshot: em telas mais
+            altas (375×812+), isso cria DOIS vazios grandes e desconectados
+            — um entre a faixa de utilidade e a imagem, outro entre as tags
+            e a descrição — porque toda a folga sobra em volta da imagem
+            especificamente, sem nenhuma ir pro resto da composição. Trocado
+            para justify-center AQUI (não na stage): a stage volta a ter
+            altura NATURAL (sem flex-1/min-h-0 própria — ver abaixo), então
+            o conjunto [stage + bloco de descrição/CTAs] passa a se
+            comportar como um bloco ÚNICO e coeso, com o espaçamento interno
+            entre os dois (mt-* do bloco de CTAs) sempre fixo — e é esse
+            bloco INTEIRO que fica centralizado dentro do espaço disponível
+            (herdado do flex-1 do wrapper pai). A folga extra em telas altas
+            passa a se concentrar só em DOIS lugares (acima da stage, abaixo
+            do bloco de CTAs), nunca DENTRO da composição — lê como
+            respiro intencional nas bordas, não como buraco no meio. */}
+        <div className="mx-auto flex w-full max-w-6xl min-h-0 flex-1 flex-col justify-center px-6 pb-6 sm:justify-start sm:px-10 sm:pb-10">
           <motion.div
-            className="touch-pan-y relative mt-1 flex flex-1 items-center justify-center sm:mt-6 lg:mt-14"
+            className="touch-pan-y relative mt-1 flex items-center justify-center sm:mt-6 lg:mt-14"
             onPanEnd={handlePanEnd}
           >
             {/* Setas de navegação — filhas da stage (não da section) para que
@@ -406,66 +445,20 @@ export function Hero() {
                         translate, then the child motion.div's own
                         translate/rotate/scale on top), on two different
                         elements. */}
-                  <div className="relative -mx-5 -mt-5 px-5 pt-5">
-                    {/* Vinheta atrás do produto — elemento próprio, estático
-                      (não participa da técnica de duas camadas do produto
-                      logo abaixo, nem do floating/transição dela: um bug de
-                      performance já documentado neste projeto veio
-                      exatamente de conteúdo re-rasterizando a cada frame, e
-                      esta camada não precisa acompanhar o wiggle de ±14px
-                      do floating em tempo real para ler bem, mesma lógica
-                      já usada para a sombra da própria foto). Vive FORA do
-                      motion.div animado e FORA do .fx-magnet (não herda o
-                      puxão do ímã, nem a flutuação/transição do produto) —
-                      só centralizada dentro deste wrapper, que por sua vez
-                      já tem exatamente o tamanho da caixa da imagem (o
-                      padding em 3 lados é cancelado por uma margem negativa
-                      igual, técnica já usada aqui para a área de detecção
-                      do ímã). Tamanho em INSET NEGATIVO (não px/vw fixos):
-                      cresce/encolhe automaticamente junto com a caixa da
-                      imagem em qualquer breakpoint, sem precisar de valores
-                      próprios por tamanho de tela. inset-[12%] encolhe a
-                      vinheta pra ~76% da caixa — menor que a própria caixa
-                      de propósito, para o alimento (que já preenche uma
-                      das duas dimensões da caixa via object-contain,
-                      dependendo do recorte) ultrapassar visivelmente a
-                      vinheta nessa dimensão, em vez de ficar 100% contido
-                      nela. `radial-gradient(... closest-side ...)` faz a
-                      elipse encostar exatamente nas bordas DESTA caixa
-                      (já menor que a da imagem), garantindo fade suave sem
-                      nunca formar canto reto.
-
-                      SEM `blur-*`: uma primeira versão somava um filtro de
-                      blur por cima do gradiente para suavizar ainda mais —
-                      parecia correto no Chromium (confirmado visualmente e
-                      via amostragem de pixel), mas reproduzido no WebKit
-                      (Playwright + iPhone 13 emulado) o MESMO elemento
-                      renderizava como um retângulo sólido de cantos duros,
-                      cortando contra o laranja sem gradiente nenhum — bug
-                      real de engine, não CSS incorreto: `filter: blur()`
-                      combinado com `background: radial-gradient(...
-                      transparent ...)` e `border-radius` no MESMO elemento
-                      faz o WebKit compositar a camada de forma diferente do
-                      Chromium (alpha pré-multiplicado tratado errado no
-                      blur, aparentemente). Confirmado isolando a variável:
-                      removendo só o `filter` (mantendo gradiente e
-                      border-radius intactos) via `el.style.filter='none'`
-                      no mesmo teste, o WebKit passou a renderizar a elipse
-                      perfeitamente suave, idêntica ao Chromium — ou seja, o
-                      próprio gradiente (sem blur nenhum) já é suave o
-                      bastante nos dois engines; o blur era só polimento
-                      supérfluo que teve o efeito colateral de quebrar o
-                      WebKit. Compensado com mais paradas de cor no
-                      gradiente (curva mais gradual) em vez do blur. */}
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-[12%] z-0 rounded-full"
-                      style={{
-                        background:
-                          "radial-gradient(ellipse closest-side, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.32) 30%, rgba(0,0,0,0.16) 60%, rgba(0,0,0,0.05) 85%, transparent 100%)",
-                      }}
-                    />
-                    <div ref={productMagnetRef} className="fx-magnet relative z-10">
+                  <div className="-mx-5 -mt-5 px-5 pt-5">
+                    {/* A vinheta radial escura que existia aqui atrás do
+                      produto (elemento próprio, separado da técnica de
+                      duas camadas abaixo) foi removida por completo a
+                      pedido — sem nenhum escurecimento no lugar dela. O
+                      `relative`/`z-10` que o wrapper e o .fx-magnet
+                      ganharam só para empilhar acima dela também foram
+                      revertidos, já que não servem mais pra nada. A
+                      técnica de duas camadas do produto (motion.div
+                      abaixo, cópia com drop-shadow + cópia nítida) não
+                      foi tocada — continua exatamente como era, incluindo
+                      o cache de raster que resolve o bug de performance
+                      já documentado. */}
+                    <div ref={productMagnetRef} className="fx-magnet">
                       {/* Duas cópias da mesma imagem, mas um ÚNICO contêiner
                         (este motion.div) recebe qualquer transform — tanto do
                         floating idle quanto (por herança do motion.div pai da
