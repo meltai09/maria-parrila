@@ -496,7 +496,31 @@ export function Hero() {
                           antes produzia larguras muito inconsistentes entre os
                           slides (486px vs 263px medido). Uma caixa de tamanho
                           fixo com contain deixa os dois dentro da MESMA área,
-                          preservando a proporção interna de cada imagem. */}
+                          preservando a proporção interna de cada imagem.
+
+                          drop-shadow blur 60px→40px, opacidade 0.7→0.45: os
+                          arquivos em si estão limpos (varredura de alpha em
+                          grade confirmou 0 fora do alimento, nas duas fotos —
+                          não é a mesma "sujeira de opacidade" já vista em
+                          outros assets do projeto) e não existe nenhum div/
+                          background separado por trás — o retângulo claro
+                          reportado atrás do produto era a PRÓPRIA sombra
+                          (confirmado escondendo só esta cópia: o retângulo
+                          sumia por completo). Um mapa de desvio de cor pixel
+                          a pixel, em Chromium E WebKit, mostrou que a forma
+                          da sombra já era uma elipse suave seguindo o
+                          alimento, não um retângulo geométrico de verdade —
+                          só que num blur de 60px/opacidade 0,7, numa caixa
+                          pequena (200-340px), ela ficava grande e escura o
+                          bastante pra LER como uma caixa a olho nu,
+                          principalmente depois que a vinheta que costumava
+                          se sobrepor a ela foi removida numa rodada
+                          anterior. Reduzido blur e opacidade juntos —
+                          mantém alguma base/profundidade sob o produto sem
+                          dominar visualmente a área ao redor. Só os valores
+                          do filtro mudaram; a técnica de duas camadas
+                          (cache, duas Image, um motion.div) continua
+                          idêntica. */}
                         <Image
                           aria-hidden="true"
                           alt=""
@@ -505,7 +529,7 @@ export function Hero() {
                           draggable={false}
                           sizes="(max-width: 640px) 58vw, (max-width: 1023px) 280px, 340px"
                           priority={index === 0}
-                          className="object-contain drop-shadow-[0_32px_60px_rgba(0,0,0,0.7)]"
+                          className="object-contain drop-shadow-[0_32px_40px_rgba(0,0,0,0.45)]"
                         />
                         <Image
                           src={product.image}
