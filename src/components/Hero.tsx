@@ -214,9 +214,17 @@ export function Hero() {
           fluxo auto já É a altura fixa correta; impor min-height por cima
           dele piorava, não travava. */}
       <div className="relative z-10 flex w-full flex-col">
-        <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 pb-10 sm:px-10">
+        {/* pb-6 sm:pb-10: antes era só `pb-10` (sem variante), ou seja a
+            MESMA regra pro mobile inteiro e pro desktop — reduzir o valor
+            base teria encolhido o desktop também. Adicionado `sm:pb-10`
+            pra restaurar explicitamente o valor de sempre a partir de
+            640px (idêntico ao que já era, em qualquer tamanho ≥sm), e
+            `pb-6` como override específico do mobile (<640px) — a técnica
+            que este projeto já usa (media query/breakpoint dedicado) em
+            vez de mexer numa regra compartilhada. */}
+        <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 pb-6 sm:px-10 sm:pb-10">
           <motion.div
-            className="touch-pan-y relative mt-2 flex flex-1 items-center justify-center sm:mt-6 lg:mt-14"
+            className="touch-pan-y relative mt-1 flex flex-1 items-center justify-center sm:mt-6 lg:mt-14"
             onPanEnd={handlePanEnd}
           >
             {/* Setas de navegação — filhas da stage (não da section) para que
@@ -522,7 +530,7 @@ export function Hero() {
                     produto (nenhuma animação extra), em fluxo normal para
                     que o espaço embaixo seja sempre reservado (nunca
                     sobrepõe a descrição abaixo). */}
-                  <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5 sm:mt-2 sm:gap-2">
+                  <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 sm:mt-2 sm:gap-2">
                     {product.badges.map((label, i) => (
                       <span
                         key={label}
@@ -540,12 +548,12 @@ export function Hero() {
             </AnimatePresence>
           </motion.div>
 
-          <div className="relative z-30 mt-10 flex flex-col items-center gap-6 text-center sm:mt-14 sm:gap-7 lg:mt-20 lg:gap-8">
+          <div className="relative z-30 mt-6 flex flex-col items-center gap-4 text-center sm:mt-14 sm:gap-7 lg:mt-20 lg:gap-8">
             <p className="max-w-xl font-condensed text-base font-medium text-ink sm:text-lg">
               {product.description}
             </p>
 
-            <div className="flex w-full max-w-xs flex-col items-stretch gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:items-center sm:justify-center sm:gap-4">
+            <div className="flex w-full max-w-xs flex-col items-stretch gap-2 sm:w-auto sm:max-w-none sm:flex-row sm:items-center sm:justify-center sm:gap-4">
               {/* Each CTA gets its own dedicated wrapper div — this is the
                   "detection area" useMagnetic listens on. If both buttons
                   shared one parent (e.g. this whole row), moving the mouse
