@@ -447,31 +447,45 @@ export function Hero() {
                         elements. */}
                   <div className="-mx-5 -mt-5 px-5 pt-5">
                     {/* A vinheta radial escura que existia aqui atrás do
-                      produto (elemento próprio, separado da técnica de
-                      duas camadas abaixo) foi removida por completo a
-                      pedido — sem nenhum escurecimento no lugar dela. O
-                      `relative`/`z-10` que o wrapper e o .fx-magnet
-                      ganharam só para empilhar acima dela também foram
-                      revertidos, já que não servem mais pra nada. A
-                      técnica de duas camadas do produto (motion.div
-                      abaixo, cópia com drop-shadow + cópia nítida) não
-                      foi tocada — continua exatamente como era, incluindo
-                      o cache de raster que resolve o bug de performance
-                      já documentado. */}
+                      produto foi removida numa rodada anterior. Depois, o
+                      drop-shadow do próprio produto foi suavizado (60px→
+                      40px, 0,7→0,45) numa tentativa de reduzir o
+                      escurecimento reportado — mas o pedido final foi
+                      remover o filtro por completo, sem nenhum grau de
+                      escurecimento atrás do produto. Removido.
+
+                      Isso também aposentou a técnica de duas camadas que
+                      existia aqui (uma cópia aria-hidden com drop-shadow,
+                      cacheada/estática por baixo, mais uma cópia nítida
+                      animada por cima, dentro de um único motion.div) —
+                      ela existia especificamente para resolver um bug de
+                      performance real, documentado neste projeto:
+                      re-rasterizar um filtro CSS (o drop-shadow, caro) a
+                      cada frame do floating idle (~15-20s de RasterTask
+                      acumulado em 10s, medido via CDP na época) e/ou da
+                      transição de slide. Sem filtro nenhum sobre a
+                      imagem, não existe mais nada caro pra cachear dessa
+                      forma — as duas cópias ficariam pixel-a-pixel
+                      idênticas (mesmo src, mesmo fill/object-contain,
+                      mesmo sizes), então mantê-las seria só DOM
+                      redundante sem função. Simplificado pra uma única
+                      <Image>, mas só depois de MEDIR (não assumir) que
+                      isso não reabre o bug antigo: RasterTask ~0ms/4s de
+                      movimento de mouse continuo perto do produto, tanto
+                      ANTES desta simplificação (com o filtro já suave,
+                      0,45/40px, ainda em duas camadas) quanto DEPOIS (sem
+                      filtro, uma única camada) — sem regressão em
+                      nenhuma medição, consistente com a explicação
+                      acima (nada de custoso restando pra cachear). */}
                     <div ref={productMagnetRef} className="fx-magnet">
-                      {/* Duas cópias da mesma imagem, mas um ÚNICO contêiner
-                        (este motion.div) recebe qualquer transform — tanto do
-                        floating idle quanto (por herança do motion.div pai da
-                        transição) da troca de slide. Nenhuma das duas cópias tem
-                        transform independente entre si, então nunca se separam
-                        visualmente durante o movimento (bug de "imagem
-                        fantasma" corrigido: antes, a cópia com sombra ficava
-                        parada enquanto só a cópia nítida flutuava, expondo a
-                        cópia de baixo como um duplicado estático sempre que o
-                        floating se afastava do repouso). A cópia de baixo carrega
-                        o drop-shadow; a de cima é nítida, sem filtro, sobreposta
-                        via absolute inset-0 — ambas se movem juntas porque estão
-                        dentro do mesmo elemento animado. */}
+                      {/* fill + object-contain (em vez de width/height explícitos
+                        do next/image) porque os dois cutouts têm proporções bem
+                        diferentes entre si (Filé ~2:1 bem largo, Estação Belém
+                        ~1,08:1 quase quadrado) — sizing por altura fixa como
+                        antes produzia larguras muito inconsistentes entre os
+                        slides (486px vs 263px medido). Uma caixa de tamanho
+                        fixo com contain deixa os dois dentro da MESMA área,
+                        preservando a proporção interna de cada imagem. */}
                       <motion.div
                         className="relative h-[40vw] w-[58vw] max-h-[138px] max-w-[200px] will-change-transform sm:h-[193px] sm:w-[280px] sm:max-h-none sm:max-w-none lg:h-[235px] lg:w-[340px]"
                         animate={
@@ -489,54 +503,13 @@ export function Hero() {
                             : { duration: 5, repeat: Infinity, ease: "easeInOut" }
                         }
                       >
-                        {/* fill + object-contain (em vez de width/height explícitos
-                          do next/image) porque os dois cutouts têm proporções bem
-                          diferentes entre si (Filé ~2:1 bem largo, Estação Belém
-                          ~1,08:1 quase quadrado) — sizing por altura fixa como
-                          antes produzia larguras muito inconsistentes entre os
-                          slides (486px vs 263px medido). Uma caixa de tamanho
-                          fixo com contain deixa os dois dentro da MESMA área,
-                          preservando a proporção interna de cada imagem.
-
-                          drop-shadow blur 60px→40px, opacidade 0.7→0.45: os
-                          arquivos em si estão limpos (varredura de alpha em
-                          grade confirmou 0 fora do alimento, nas duas fotos —
-                          não é a mesma "sujeira de opacidade" já vista em
-                          outros assets do projeto) e não existe nenhum div/
-                          background separado por trás — o retângulo claro
-                          reportado atrás do produto era a PRÓPRIA sombra
-                          (confirmado escondendo só esta cópia: o retângulo
-                          sumia por completo). Um mapa de desvio de cor pixel
-                          a pixel, em Chromium E WebKit, mostrou que a forma
-                          da sombra já era uma elipse suave seguindo o
-                          alimento, não um retângulo geométrico de verdade —
-                          só que num blur de 60px/opacidade 0,7, numa caixa
-                          pequena (200-340px), ela ficava grande e escura o
-                          bastante pra LER como uma caixa a olho nu,
-                          principalmente depois que a vinheta que costumava
-                          se sobrepor a ela foi removida numa rodada
-                          anterior. Reduzido blur e opacidade juntos —
-                          mantém alguma base/profundidade sob o produto sem
-                          dominar visualmente a área ao redor. Só os valores
-                          do filtro mudaram; a técnica de duas camadas
-                          (cache, duas Image, um motion.div) continua
-                          idêntica. */}
-                        <Image
-                          aria-hidden="true"
-                          alt=""
-                          src={product.image}
-                          fill
-                          draggable={false}
-                          sizes="(max-width: 640px) 58vw, (max-width: 1023px) 280px, 340px"
-                          priority={index === 0}
-                          className="object-contain drop-shadow-[0_32px_40px_rgba(0,0,0,0.45)]"
-                        />
                         <Image
                           src={product.image}
                           alt={`${product.name}, criação da Maria Parrilla`}
                           fill
                           draggable={false}
                           sizes="(max-width: 640px) 58vw, (max-width: 1023px) 280px, 340px"
+                          priority={index === 0}
                           className="object-contain"
                         />
                       </motion.div>
