@@ -205,6 +205,42 @@ export function Hero() {
         </div>
       </div>
 
+      {/* Selo mobile-only: pinado no canto superior esquerdo da TELA (não do
+          bloco de lettering) — diferente do selo sm+/lg abaixo, que continua
+          ancorado à cópia-fantasma do lettering (ver comentário lá). Vive
+          direto na <section> (que é `relative` e ocupa a viewport inteira no
+          topo da página), por isso `left-2 top-1` já posiciona x/y perto de
+          0 em relação à TELA, não a nenhum elemento do meio da composição.
+          z-40 (acima da faixa de utilidade, z-20, e de tudo mais no Hero,
+          teto anterior z-30) de propósito: o pedido é sobrepor levemente a
+          faixa preta, não ficar atrás dela. `sm:hidden` — a partir de 640px
+          este bloco some por completo e o selo ganho ancorado ao lettering
+          (abaixo) volta a ser o único visível, sem nenhuma mudança de
+          desktop/tablet. */}
+      <div className="absolute left-2 top-1 z-40 sm:hidden">
+        <div className="relative h-20 w-20">
+          <span className="relative block h-full w-full overflow-hidden rounded-full bg-ink ring-2 ring-gold/40">
+            <Image
+              src="/images/brand/logo.png"
+              alt="Maria Parrilla Steakhouse"
+              fill
+              sizes="80px"
+              className="object-contain p-1.5"
+              priority
+            />
+          </span>
+          {/* "Na brasa" segue a logo pro canto da tela — antes ficava
+              ancorada ao mesmo texto-fantasma que a versão sm+ usa; como a
+              logo mobile saiu de lá, a tag reaproveita aqui a MESMA relação
+              visual de antes (tangenciando a borda inferior-direita do
+              selo), só que com o selo como referência local em vez do
+              lettering. */}
+          <span className="absolute -bottom-1 left-[66px] -rotate-6 whitespace-nowrap rounded-full border border-gold/40 bg-ink px-3 py-1 font-condensed text-[10px] uppercase tracking-[0.2em] text-gold/80">
+            Na brasa
+          </span>
+        </div>
+      </div>
+
       {/* Desktop/tablet (≥640px): continua SEM min-height/height explícito,
           pelo mesmo motivo de sempre — min-h-[Xvh] crescia o Hero além do
           necessário em viewports altos/estreitos (768×1024 chegava a ter
@@ -313,18 +349,24 @@ export function Hero() {
                 {/* Selo circular da logo — canto superior esquerdo da
                   composição, ao lado do badge "Na brasa". Ancorado ao mesmo
                   ghost copy (mesma técnica), então fica parado durante a
-                  transição de slide como os demais badges fixos. */}
-                <span className="visible absolute -left-14 -top-8 h-11 w-11 overflow-hidden rounded-full bg-ink ring-1 ring-gold/40 sm:-left-24 sm:-top-14 sm:h-20 sm:w-20 lg:-left-28 lg:-top-16 lg:h-24 lg:w-24">
+                  transição de slide como os demais badges fixos. `hidden
+                  sm:block`: abaixo de 640px esta versão (ancorada ao
+                  lettering, no meio da tela) some por completo — o mobile
+                  ganhou sua própria logo, maior e pinada no canto da TELA
+                  (ver bloco logo após a faixa de utilidade, acima). Nada
+                  muda aqui a partir de sm:, mesmo posicionamento/tamanho de
+                  sempre. */}
+                <span className="visible absolute -left-24 -top-14 hidden h-20 w-20 overflow-hidden rounded-full bg-ink ring-1 ring-gold/40 sm:block lg:-left-28 lg:-top-16 lg:h-24 lg:w-24">
                   <Image
                     src="/images/brand/logo.png"
                     alt="Maria Parrilla Steakhouse"
                     fill
-                    sizes="(max-width: 639px) 44px, (max-width: 1023px) 80px, 96px"
+                    sizes="(max-width: 1023px) 80px, 96px"
                     className="object-contain p-1"
                     priority
                   />
                 </span>
-                <span className="visible absolute -left-3 -top-2 -rotate-6 rounded-full border border-gold/40 bg-ink px-3 py-1 font-condensed text-[10px] uppercase tracking-[0.2em] text-gold/80 sm:-left-4 sm:-top-3">
+                <span className="visible absolute -left-4 -top-3 hidden -rotate-6 rounded-full border border-gold/40 bg-ink px-3 py-1 font-condensed text-[10px] uppercase tracking-[0.2em] text-gold/80 sm:block">
                   Na brasa
                 </span>
               </span>
