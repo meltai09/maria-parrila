@@ -196,7 +196,19 @@ export function Hero() {
           faixa, mas continua em uso no rodapé (SiteFooter) — não foi
           removida do projeto, só deste ponto específico. */}
       <div className="relative z-20 border-b border-ink-line bg-ink">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-3 gap-y-1 px-6 py-2 text-center font-condensed text-[10px] uppercase tracking-[0.15em] text-cream-dim sm:px-10 sm:py-3 sm:text-xs">
+        {/* pl-24 (96px) em vez de px-6 simétrico: a logo mobile (selo
+            abaixo, canto superior esquerdo da TELA) se sobrepõe de propósito
+            a esta faixa — medido via getBoundingClientRect que ela ocupa
+            x:8-88px nessa altura (80px de diâmetro + 8px de inset) — sem
+            essa folga a PRIMEIRA linha do texto centralizado ficava por
+            baixo do selo e era cortada visualmente ("AV. EURICO REZENDE"
+            virava "EURICO REZENDE", bug real reportado). 96px = 88px do
+            selo + ~8px de respiro. Só a esquerda ganha o respiro (pr-6
+            continua simétrico ao padrão anterior) porque só esse lado tem
+            algo se sobrepondo; sm:px-10 restaura a simetria original a
+            partir de 640px, onde o selo mobile nem existe mais
+            (`sm:hidden`, ver abaixo). */}
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-3 gap-y-1 py-2 pl-24 pr-6 text-center font-condensed text-[10px] uppercase tracking-[0.15em] text-cream-dim sm:px-10 sm:py-3 sm:text-xs">
           <span>{site.address.street}</span>
           <span className="text-cream-dim/40">·</span>
           <span>{site.address.neighborhood}</span>
@@ -234,8 +246,25 @@ export function Hero() {
               logo mobile saiu de lá, a tag reaproveita aqui a MESMA relação
               visual de antes (tangenciando a borda inferior-direita do
               selo), só que com o selo como referência local em vez do
-              lettering. */}
-          <span className="absolute -bottom-1 left-[66px] -rotate-6 whitespace-nowrap rounded-full border border-gold/40 bg-ink px-3 py-1 font-condensed text-[10px] uppercase tracking-[0.2em] text-gold/80">
+              lettering.
+
+              `top-[90px]` (não mais leveled com o centro do selo): a faixa
+              de utilidade acima cresce de altura conforme a largura (o
+              texto quebra em mais linhas nas larguras mais estreitas —
+              medido via getBoundingClientRect: 85px de altura em
+              320-375px, caindo pra 51px a partir de ~390px, efeito
+              esperado do pl-24 adicionado à faixa). Uma primeira tentativa
+              nivelou a tag com o centro vertical do selo (~top-[52px]) e
+              ela passou a tampar parte da própria faixa (a última linha,
+              "Ter-Dom..."), reabrindo o mesmo tipo de bug que este ajuste
+              existe pra corrigir — pego em screenshot ampliado, não só por
+              cálculo. 90px folga com margem sobre os 85px do pior caso
+              (320-375px); em larguras mais largas (≥390px, faixa com só
+              51px) sobra mais respiro entre a faixa e a tag, mas ela
+              continua tangenciando a borda inferior do selo (que vai até
+              84px) — aceitável frente à prioridade de nunca cobrir texto
+              real da faixa. */}
+          <span className="absolute left-[58px] top-[90px] -rotate-6 whitespace-nowrap rounded-full border border-gold/40 bg-ink px-3 py-1 font-condensed text-[10px] uppercase tracking-[0.2em] text-gold/80">
             Na brasa
           </span>
         </div>
